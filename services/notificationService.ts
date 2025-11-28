@@ -41,8 +41,11 @@ export const notificationService = {
             if (registration && 'showNotification' in registration) {
                 return await registration.showNotification(title, {
                     ...options,
-                    icon: options?.icon || '/icon.png', // Ensure icon is present
-                    vibrate: [200, 100, 200] // Vibration pattern for Android
+                    icon: options?.icon || './icon.svg',
+                    badge: './icon.svg',
+                    vibrate: [200, 100, 200],
+                    requireInteraction: true, // Keep notification until user interacts
+                    tag: options?.tag || 'lifesync-notification'
                 } as any);
             }
         }
@@ -50,7 +53,7 @@ export const notificationService = {
         // Method 2: Standard Web Notification (Fallback for Desktop/Open Tab)
         return new Notification(title, {
             ...options,
-            icon: options?.icon || '/icon.png'
+            icon: options?.icon || './icon.svg'
         });
     } catch (e) {
         console.error('Notification failed:', e);
