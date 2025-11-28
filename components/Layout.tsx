@@ -33,9 +33,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-slate-900 transition-colors duration-200">
       {/* Header */}
-      <header className="bg-white dark:bg-slate-800 shadow-sm p-4 z-10 flex justify-between items-center transition-colors">
+      <header className="bg-white dark:bg-slate-800 shadow-sm p-4 z-10 flex justify-between items-center transition-colors shrink-0">
         <div className="flex items-center gap-2">
            <div className="p-2 bg-indigo-500 rounded-lg shadow-indigo-200 dark:shadow-none shadow-md">
              <Zap className="text-white w-5 h-5" />
@@ -57,14 +57,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto no-scrollbar pb-20 p-4">
-        <div className="max-w-md mx-auto h-full">
+      <main className="flex-1 overflow-y-auto no-scrollbar scroll-smooth">
+        <div className="max-w-md mx-auto min-h-full p-4 pb-32">
             {children}
         </div>
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 pb-safe z-20">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 z-20 pb-[env(safe-area-inset-bottom)]">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">
           {navItems.map((item) => (
             <NavLink

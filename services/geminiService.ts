@@ -34,3 +34,34 @@ export const parseNaturalLanguageTask = async (input: string): Promise<{ title: 
     return null;
   }
 };
+
+export const getTimeZoneInfo = async (cityQuery: string): Promise<{ name: string; timeZone: string } | null> => {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `Identify the correct IANA time zone identifier and a standard display name (City, Country Code) for the location described as: "${cityQuery}".
+      Return a JSON object with keys "name" and "timeZone".
+      Example: { "name": "Paris, FR", "timeZone": "Europe/Paris" }
+      If the location is invalid or cannot be determined, return null.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            name: { type: Type.STRING },
+            timeZone: { type: Type.STRING },
+          },
+          required: ["name", "timeZone"]
+        }
+      }
+    });
+
+    if (response.text) {
+      return JSON.parse(response.text);
+    }
+    return null;
+  } catch (error) {
+    console.error("Gemini TimeZone Error:", error);
+    return null;
+  }
+};

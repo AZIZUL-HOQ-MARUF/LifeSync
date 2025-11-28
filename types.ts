@@ -22,7 +22,9 @@ export interface CityTimeZone {
 export enum GameType {
   NONE = 'none',
   TIC_TAC_TOE = 'tic_tac_toe',
-  SNAKE = 'snake'
+  SNAKE = 'snake',
+  MEMORY = 'memory',
+  GAME_2048 = 'game_2048'
 }
 
 export interface User {
