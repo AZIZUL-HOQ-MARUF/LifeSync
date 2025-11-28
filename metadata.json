@@ -1,0 +1,5 @@
+{
+  "name": "LifeSync PWA",
+  "description": "A comprehensive personal assistant PWA featuring smart AI task management, a game center for downtime, world clock, and local notifications. Designed to be installed on mobile devices.",
+  "requestFramePermissions": []
+}
