@@ -1,9 +1,6 @@
 
 /* eslint-disable no-restricted-globals */
-// Service Worker for LifeSync PWA with OneSignal integration
-
-// Import OneSignal service worker
-importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
+// Service Worker for LifeSync PWA
 
 const CACHE_NAME = 'lifesync-v' + new Date().getTime(); // Auto-increment with timestamp
 const urlsToCache = [
