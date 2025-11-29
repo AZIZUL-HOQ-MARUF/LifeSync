@@ -1,6 +1,7 @@
 {
   "name": "LifeSync - Personal Assistant",
   "short_name": "LifeSync",
+  "id": "/",
   "description": "A comprehensive personal assistant PWA featuring smart AI task management, a game center for downtime, world clock, and local notifications.",
   "start_url": "./",
   "scope": "./",
