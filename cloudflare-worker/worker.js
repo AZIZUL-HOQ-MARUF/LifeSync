@@ -8,6 +8,7 @@ export default {
     // Only allow requests from your domain
     const allowedOrigins = [
       'https://azizul-hoq-maruf.github.io',
+      'https://lifesync-f26.pages.dev',
       'http://localhost:3000',
       'http://localhost:3001'
     ];

@@ -55,22 +55,22 @@ Click **Add variable** for each:
 
 | Variable Name | Value |
 |--------------|-------|
-| `VITE_GEMINI_PROXY_URL` | `https://lifesync-gemini-proxy.lifesync.workers.dev` |
-| `VITE_ONESIGNAL_APP_ID` | `f57954ce-62e7-4031-acd4-8dc053e88f68` |
+| `VITE_GEMINI_PROXY_URL` | `https://lifesync-gemini-proxy.lifesync.workers.dev` | (cloudflare proxy)
+| `VITE_ONESIGNAL_APP_ID` | `f57954ce-62e7-4031-acd4-**********` | (ONESIGNAL_APP_ID)
 | `NODE_VERSION` | `20` |
 
 ### 5. Deploy
 
 1. Click **Save and Deploy**
 2. Wait ~2 minutes for build
-3. Your site will be live at: `https://lifesync.pages.dev`
+3. Your site will be live at: `https://lifesync.pages.dev` // or something similar
 
 ### 6. Update OneSignal Dashboard
 
 1. Go to OneSignal Dashboard: https://onesignal.com/
 2. Select your **LifeSync** app
 3. Go to **Settings** → **Configuration**
-4. Update **Site URL** to: `https://lifesync.pages.dev`
+4. Update **Site URL** to: `https://lifesync.pages.dev` // the deployed version url
 5. Click **Save**
 
 ## Testing
