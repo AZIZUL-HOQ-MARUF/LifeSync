@@ -10,7 +10,7 @@ export const oneSignalService = {
         serviceWorkerParam: {
           scope: '/LifeSync/'
         },
-        serviceWorkerPath: 'OneSignalSDK.sw.js'
+        serviceWorkerPath: '/LifeSync/OneSignalSDK.sw.js'
       });
       
       console.log('OneSignal initialized');
