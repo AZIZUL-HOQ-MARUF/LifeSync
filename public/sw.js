@@ -37,11 +37,16 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - network first, fallback to cache
+// Fetch event - network first, fallback to cache with offline page support
 self.addEventListener('fetch', (event) => {
   // Don't cache POST requests or external API calls
   if (event.request.method !== 'GET' || event.request.url.includes('workers.dev')) {
-    event.respondWith(fetch(event.request));
+    event.respondWith(fetch(event.request).catch(() => {
+      // Return a basic offline response for failed API calls
+      return new Response(JSON.stringify({ error: 'Offline', message: 'You are currently offline' }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }));
     return;
   }
 
@@ -61,7 +66,15 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(() => {
         // If network fails, try cache
-        return caches.match(event.request);
+        return caches.match(event.request).then(cachedResponse => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          // Return offline fallback for navigation requests
+          if (event.request.mode === 'navigate') {
+            return caches.match('/index.html');
+          }
+        });
       })
   );
 });
@@ -147,4 +160,38 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// Periodic background sync for data refresh (requires user permission)
+self.addEventListener('periodicsync', (event) => {
+  console.log('Periodic sync triggered:', event.tag);
+  
+  if (event.tag === 'refresh-data') {
+    event.waitUntil(
+      clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'PERIODIC_SYNC',
+            tag: event.tag
+          });
+        });
+      })
+    );
+  }
+});
 
+// Install prompt handling
+let deferredPrompt;
+
+self.addEventListener('beforeinstallprompt', (event) => {
+  // Prevent the mini-infobar from appearing on mobile
+  event.preventDefault();
+  // Stash the event so it can be triggered later
+  deferredPrompt = event;
+  // Notify the app that install is available
+  clients.matchAll().then(clients => {
+    clients.forEach(client => {
+      client.postMessage({
+        type: 'INSTALL_AVAILABLE'
+      });
+    });
+  });
+});
