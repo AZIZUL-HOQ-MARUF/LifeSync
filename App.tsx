@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import TasksPage from './pages/TasksPage';
@@ -7,8 +7,19 @@ import ClockPage from './pages/ClockPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import { AuthProvider } from './context/AuthContext';
+import { oneSignalService } from './services/oneSignalService';
 
 function App() {
+  useEffect(() => {
+    // Initialize OneSignal when app loads
+    const oneSignalAppId = import.meta.env.VITE_ONESIGNAL_APP_ID;
+    if (oneSignalAppId) {
+      oneSignalService.initialize(oneSignalAppId);
+    } else {
+      console.warn('OneSignal App ID not found. Add VITE_ONESIGNAL_APP_ID to .env.local');
+    }
+  }, []);
+
   return (
     <HashRouter>
       <AuthProvider>
