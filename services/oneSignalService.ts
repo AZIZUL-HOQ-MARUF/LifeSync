@@ -6,8 +6,7 @@ export const oneSignalService = {
     try {
       await OneSignal.init({
         appId: appId,
-        allowLocalhostAsSecureOrigin: true,
-        path: '/LifeSync/'
+        allowLocalhostAsSecureOrigin: true
       });
       
       console.log('OneSignal initialized');

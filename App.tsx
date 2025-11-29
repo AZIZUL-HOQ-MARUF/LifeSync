@@ -11,10 +11,17 @@ import { oneSignalService } from './services/oneSignalService';
 
 function App() {
   useEffect(() => {
-    // Skip OneSignal initialization - requires root domain, not compatible with GitHub Pages subdirectories
-    // OneSignal requires files at root (/) but GitHub Pages serves from /LifeSync/
-    // To enable: deploy to custom domain or use GitHub Pages at root
-    console.log('OneSignal skipped: requires root domain deployment');
+    // Initialize OneSignal when app loads (only on production domain)
+    const oneSignalAppId = import.meta.env.VITE_ONESIGNAL_APP_ID;
+    const isProduction = window.location.hostname !== 'localhost';
+    
+    if (oneSignalAppId && isProduction) {
+      oneSignalService.initialize(oneSignalAppId);
+    } else if (!isProduction) {
+      console.log('OneSignal skipped on localhost');
+    } else {
+      console.warn('OneSignal App ID not found. Add VITE_ONESIGNAL_APP_ID to .env.local');
+    }
   }, []);
 
   return (
