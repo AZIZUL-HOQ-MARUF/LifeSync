@@ -2,7 +2,7 @@
 /* eslint-disable no-restricted-globals */
 // Service Worker for LifeSync PWA
 
-const CACHE_NAME = 'lifesync-v1';
+const CACHE_NAME = 'lifesync-v' + new Date().getTime(); // Auto-increment with timestamp
 const urlsToCache = [
   '/',
   '/index.html',
@@ -39,6 +39,12 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - network first, fallback to cache
 self.addEventListener('fetch', (event) => {
+  // Don't cache POST requests or external API calls
+  if (event.request.method !== 'GET' || event.request.url.includes('workers.dev')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then(response => {

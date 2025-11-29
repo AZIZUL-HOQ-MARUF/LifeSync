@@ -11,10 +11,14 @@ import { oneSignalService } from './services/oneSignalService';
 
 function App() {
   useEffect(() => {
-    // Initialize OneSignal when app loads
+    // Initialize OneSignal when app loads (only on production domain)
     const oneSignalAppId = import.meta.env.VITE_ONESIGNAL_APP_ID;
-    if (oneSignalAppId) {
+    const isProduction = window.location.hostname.includes('github.io');
+    
+    if (oneSignalAppId && isProduction) {
       oneSignalService.initialize(oneSignalAppId);
+    } else if (!isProduction) {
+      console.log('OneSignal skipped on localhost (only works on production domain)');
     } else {
       console.warn('OneSignal App ID not found. Add VITE_ONESIGNAL_APP_ID to .env.local');
     }
