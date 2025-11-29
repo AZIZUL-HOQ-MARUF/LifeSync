@@ -8,8 +8,9 @@ export const oneSignalService = {
         appId: appId,
         allowLocalhostAsSecureOrigin: true,
         serviceWorkerParam: {
-          scope: '/'
-        }
+          scope: '/LifeSync/'
+        },
+        serviceWorkerPath: '/LifeSync/sw.js'
       });
       
       console.log('OneSignal initialized');
