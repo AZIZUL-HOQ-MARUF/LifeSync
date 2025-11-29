@@ -1,0 +1,6 @@
+name = "lifesync-gemini-proxy"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[env.production.vars]
+# Don't put your actual API key here - use wrangler secret put command

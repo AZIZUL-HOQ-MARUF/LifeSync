@@ -1,110 +1,111 @@
-# OneSignal Setup Guide for LifeSync
+# OneSignal Setup Guide
 
-OneSignal provides FREE push notifications that work on iOS, Android, and Web.
+## 1. Create OneSignal Account
 
-## Quick Setup (5 minutes):
+1. Go to [OneSignal.com](https://onesignal.com/) and sign up for a free account
+2. Click **"New App/Website"** button
+3. Enter your app name: **LifeSync**
+4. Select **Web Push** as the platform
 
-### 1. Create OneSignal Account
+## 2. Configure Web Push Settings
 
-1. Go to [OneSignal.com](https://onesignal.com/)
-2. Click **"Get Started Free"**
-3. Sign up with email or Google
+### Choose Integration Type
+- Select **"Typical Site"** (not WordPress)
 
-### 2. Create New App
+### Site Setup
+- **Site Name**: LifeSync
+- **Site URL**: `https://azizul-hoq-maruf.github.io`
+- **Default Notification Icon URL**: `https://azizul-hoq-maruf.github.io/LifeSync/icon.svg`
+- **Auto Resubscribe**: Enable (recommended)
 
-1. Click **"New App/Website"**
-2. Enter app name: **LifeSync**
-3. Select **"Web Push"**
-4. Click **"Next"**
+### Permission Prompt Settings
+- Choose **"Slide Prompt"** for better UX
+- Customize prompt text:
+  - Title: "Stay Updated!"
+  - Message: "Get notified about your tasks and reminders"
+  - Accept button: "Allow"
+  - Cancel button: "No Thanks"
 
-### 3. Configure Web Push
+### Advanced Settings (Optional)
+- **Safari Web Push**: Skip (requires Apple Developer account $99/year)
+- **Welcome Notification**: Enable with custom message:
+  - Title: "Welcome to LifeSync!"
+  - Message: "You'll now receive task reminders and notifications"
 
-**Choose Configuration:**
-1. Select **"Typical Site"**
+## 3. Get Your App ID
 
-**Site Setup:**
-1. **Site Name**: `LifeSync`
-2. **Site URL**: `https://azizul-hoq-maruf.github.io`
-3. **Default Icon URL**: `https://azizul-hoq-maruf.github.io/LifeSync/icon.svg`
-4. Click **"Save"**
+After completing setup:
+1. Go to **Settings** → **Keys & IDs**
+2. Copy your **OneSignal App ID**
+3. Add it to `.env.local`:
+   ```
+   VITE_ONESIGNAL_APP_ID=your-app-id-here
+   ```
 
-### 4. Get Your App ID
+## 4. Add GitHub Secret
 
-1. After setup, you'll see your **App ID** (format: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`)
-2. **COPY THIS APP ID** - you'll need it!
-
-### 5. Add App ID to Your Project
-
-**For local development:**
-
-Create/update `.env.local`:
-```bash
-GEMINI_API_KEY=your_existing_key
-VITE_ONESIGNAL_APP_ID=your_onesignal_app_id_here
-```
-
-**For GitHub Pages deployment:**
-
-Add GitHub Secret:
-1. Go to: https://github.com/AZIZUL-HOQ-MARUF/LifeSync/settings/secrets/actions
+For production deployment:
+1. Go to GitHub repo → **Settings** → **Secrets and variables** → **Actions**
 2. Click **"New repository secret"**
 3. Name: `VITE_ONESIGNAL_APP_ID`
 4. Value: Your OneSignal App ID
 5. Click **"Add secret"**
 
-### 6. iOS Setup (Optional but Recommended)
+## 5. Testing Notifications
 
-For iOS push notifications:
+### Local Testing
+```bash
+npm run dev
+```
+- Open http://localhost:3000
+- You should see the OneSignal permission prompt
+- Click "Allow" to subscribe
+- Check browser console for: "OneSignal initialized successfully"
 
-1. In OneSignal dashboard, go to **Settings → Platforms**
-2. Click **"Apple iOS (APNs)"**
-3. Follow the wizard - OneSignal will guide you through:
-   - Creating Apple Developer certificates
-   - Uploading .p12 certificate
-   
-*Note: This requires an Apple Developer account ($99/year), but you can skip this and still have Android + Web working.*
+### Test Notification (from OneSignal Dashboard)
+1. Go to **Messages** → **New Push**
+2. Select **"Send to Test Device"**
+3. Enter your subscription ID (shown in browser console)
+4. Send a test notification
+5. You should receive it even when the app is closed!
 
-### 7. Test Notifications
+## 6. Sending Notifications from Code
 
-**From OneSignal Dashboard:**
-1. Go to **Messages → New Push**
-2. Enter message title and content
-3. Click **"Send to Test Device"** or **"Send to All Subscribers"**
+The app automatically initializes OneSignal. To send notifications:
 
-**From Your App:**
-1. Open the app on mobile or desktop
-2. Allow notifications when prompted
-3. Create a task with a due date
-4. Notification will be sent via OneSignal
+```typescript
+// In your service worker or backend
+await fetch('https://onesignal.com/api/v1/notifications', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Basic YOUR_REST_API_KEY'
+  },
+  body: JSON.stringify({
+    app_id: 'YOUR_APP_ID',
+    contents: { en: 'Task due in 10 minutes!' },
+    headings: { en: 'LifeSync Reminder' },
+    included_segments: ['Subscribed Users']
+  })
+});
+```
 
-## What Works:
+## Troubleshooting
 
-✅ **Android Chrome**: Full background notifications
-✅ **Desktop Chrome/Edge/Firefox**: Full support  
-✅ **iOS Safari (with APNs setup)**: Real native push notifications
-✅ **Works when app is closed**
-✅ **Works across devices**
+### Not receiving notifications?
+- Check if notifications are blocked in browser settings
+- Verify service worker is registered (DevTools → Application → Service Workers)
+- Check OneSignal dashboard for subscription status
 
-## Pricing:
+### iOS not working?
+- iOS requires Apple Developer account ($99/year) for push certificates
+- Web push on iOS only works in Safari with proper APNs setup
+- For now, focus on Android + Desktop notifications
 
-- **FREE**: Up to 10,000 subscribers, unlimited notifications
-- You have <100 users, so **completely FREE**
+## Free Tier Limits
+- ✅ 10,000 subscribers
+- ✅ Unlimited notifications
+- ✅ Email & in-app support
+- ✅ Basic analytics
 
-## Features You Get:
-
-- ✅ Automatic notification delivery
-- ✅ Delivery analytics
-- ✅ User segmentation
-- ✅ Scheduled notifications
-- ✅ Rich media (images, buttons)
-- ✅ Web dashboard to send messages
-
-## Support:
-
-- OneSignal handles all the complex platform-specific setup
-- Works on PWAs installed to home screen
-- No need to manage certificates/tokens yourself
-
----
-
-**Ready?** Get your App ID and add it to `.env.local`, then test!
+Perfect for personal projects!
