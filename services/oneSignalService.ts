@@ -7,8 +7,10 @@ export const oneSignalService = {
       await OneSignal.init({
         appId: appId,
         allowLocalhostAsSecureOrigin: true,
-        path: '/LifeSync/',
-        serviceWorkerPath: '/LifeSync/OneSignalSDKWorker.js'
+        serviceWorkerParam: {
+          scope: '/LifeSync/'
+        },
+        serviceWorkerPath: 'OneSignalSDK.sw.js'
       });
       
       console.log('OneSignal initialized');
