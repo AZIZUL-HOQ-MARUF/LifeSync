@@ -97,8 +97,8 @@ self.addEventListener('push', (event) => {
   let notificationData = {
     title: 'LifeSync',
     body: 'You have a new notification',
-    icon: './icon.svg',
-    badge: './icon.svg'
+    icon: './icon-192.png',
+    badge: './icon-192.png'
   };
   
   if (event.data) {
@@ -117,6 +117,34 @@ self.addEventListener('push', (event) => {
       vibrate: [200, 100, 200]
     })
   );
+});
+
+// Background sync for offline task creation
+self.addEventListener('sync', (event) => {
+  console.log('Background sync triggered:', event.tag);
+  
+  if (event.tag === 'sync-tasks') {
+    event.waitUntil(
+      // Sync pending tasks when back online
+      clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'BACKGROUND_SYNC',
+            tag: event.tag
+          });
+        });
+      })
+    );
+  }
+});
+
+// Message handler for communication with the app
+self.addEventListener('message', (event) => {
+  console.log('SW received message:', event.data);
+  
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 
