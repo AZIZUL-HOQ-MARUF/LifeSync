@@ -169,6 +169,73 @@ const PIP_LAYOUTS: Record<number, [number, number][]> = {
   6: [[0,0],[0,2],[1,0],[1,2],[2,0],[2,2]],
 };
 
+// ─── Audio ────────────────────────────────────────────────────────────────────
+
+function playDiceSound() {
+  try {
+    const AudioCtx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+    // Rattling clicks — dice tumbling
+    for (let i = 0; i < 5; i++) {
+      const t = now + i * 0.055;
+      const len = Math.floor(ctx.sampleRate * 0.035);
+      const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let j = 0; j < len; j++) d[j] = (Math.random() * 2 - 1) * Math.pow(1 - j / len, 2);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'bandpass';
+      filt.frequency.value = 1000 + i * 160;
+      filt.Q.value = 1.5;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.12 + i * 0.025, t);
+      src.connect(filt); filt.connect(g); g.connect(ctx.destination);
+      src.start(t);
+    }
+    // Thud — dice lands on board
+    const tt = now + 0.31;
+    const tLen = Math.floor(ctx.sampleRate * 0.18);
+    const tBuf = ctx.createBuffer(1, tLen, ctx.sampleRate);
+    const td = tBuf.getChannelData(0);
+    for (let i = 0; i < tLen; i++) td[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.025));
+    const tSrc = ctx.createBufferSource();
+    tSrc.buffer = tBuf;
+    const tFilt = ctx.createBiquadFilter();
+    tFilt.type = 'lowpass';
+    tFilt.frequency.value = 160;
+    const tGain = ctx.createGain();
+    tGain.gain.setValueAtTime(2.2, tt);
+    tGain.gain.exponentialRampToValueAtTime(0.001, tt + 0.16);
+    tSrc.connect(tFilt); tFilt.connect(tGain); tGain.connect(ctx.destination);
+    tSrc.start(tt);
+  } catch { /* audio unavailable */ }
+}
+
+function playTokenSound() {
+  try {
+    const AudioCtx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+    const len = Math.floor(ctx.sampleRate * 0.07);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.008));
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const filt = ctx.createBiquadFilter();
+    filt.type = 'bandpass';
+    filt.frequency.value = 900;
+    filt.Q.value = 0.8;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(1.5, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+    src.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+    src.start(now);
+  } catch { /* audio unavailable */ }
+}
+
 // ─── Dice Button ──────────────────────────────────────────────────────────────
 
 const DICE_PALETTE: Record<PlayerColor, { top: string; mid: string; shadow: string }> = {
@@ -231,7 +298,7 @@ const DiceButton: React.FC<{
             })
           : (
             <div style={{ gridColumn: '1/-1', gridRow: '1/-1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 'bold', color: pal.mid }}>
-              {canRoll ? '?' : '•'}
+              {canRoll ? '?' : ''}
             </div>
           )
         }
@@ -282,6 +349,7 @@ const Ludo: React.FC = () => {
   const rollDice = useCallback(() => {
     if (state.diceRolled) return;
     setRolling(true);
+    playDiceSound();
     setTimeout(() => {
       setRolling(false);
       const dice = Math.floor(Math.random() * 6) + 1;
@@ -307,6 +375,7 @@ const Ludo: React.FC = () => {
   }, [state]);
 
   const moveToken = useCallback((tokenId: string) => {
+    playTokenSound();
     setState(s => {
       if (!s.movableTokenIds.includes(tokenId) || s.diceValue === null) return s;
 
@@ -668,7 +737,7 @@ const Ludo: React.FC = () => {
                     <span
                       className="absolute inset-0 flex items-center justify-center select-none pointer-events-none"
                       style={{ fontSize: '86%', opacity: 0.5 }}
-                    >🌐</span>
+                    >🏠</span>
                   )}
 
                   {/* Tokens on track / home-col / center */}
