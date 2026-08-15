@@ -3,7 +3,8 @@ import TicTacToe from '../components/games/TicTacToe';
 import SnakeGame from '../components/games/Snake.tsx';
 import MemoryMatch from '../components/games/MemoryMatch.tsx';
 import Game2048 from '../components/games/Game2048.tsx';
-import { Gamepad2, ArrowLeft, Grid, Brain, Hash, Circle } from 'lucide-react';
+import Ludo from '../components/games/Ludo.tsx';
+import { Gamepad2, ArrowLeft, Grid, Brain, Hash, Circle, Dices } from 'lucide-react';
 import { GameType } from '../types';
 
 const GamesPage: React.FC = () => {
@@ -22,6 +23,7 @@ const GamesPage: React.FC = () => {
         {selectedGame === GameType.SNAKE && <SnakeGame />}
         {selectedGame === GameType.MEMORY && <MemoryMatch />}
         {selectedGame === GameType.GAME_2048 && <Game2048 />}
+        {selectedGame === GameType.LUDO && <Ludo />}
       </div>
     );
   }
@@ -84,6 +86,19 @@ const GamesPage: React.FC = () => {
                <Hash className="opacity-50 w-5 h-5" />
             </div>
             <p className="text-orange-100 text-xs mt-1">Join the numbers.</p>
+          </div>
+        </button>
+
+        <button
+          onClick={() => setSelectedGame(GameType.LUDO)}
+          className="p-5 bg-gradient-to-br from-red-500 via-blue-500 to-green-500 rounded-2xl text-white shadow-lg transform transition hover:scale-[1.02] active:scale-95 text-left flex flex-col justify-between h-32"
+        >
+          <div>
+            <div className="flex justify-between items-start">
+              <h3 className="text-lg font-bold">Ludo</h3>
+              <Dices className="opacity-50 w-5 h-5" />
+            </div>
+            <p className="text-red-100 text-xs mt-1">Race your tokens home.</p>
           </div>
         </button>
       </div>

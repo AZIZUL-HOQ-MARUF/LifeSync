@@ -24,7 +24,8 @@ export enum GameType {
   TIC_TAC_TOE = 'tic_tac_toe',
   SNAKE = 'snake',
   MEMORY = 'memory',
-  GAME_2048 = 'game_2048'
+  GAME_2048 = 'game_2048',
+  LUDO = 'ludo'
 }
 
 export interface User {
