@@ -234,6 +234,7 @@ const Ludo: React.FC = () => {
     const map: Record<string, Token[]> = {};
     for (const token of state.tokens) {
       if (token.position === -1) continue;
+      if (token.position === 57) continue; // rendered by FinishedTokensOverlay
       const pos = getTokenGridPos(token);
       if (!pos) continue;
       const key = `${pos[0]}-${pos[1]}`;

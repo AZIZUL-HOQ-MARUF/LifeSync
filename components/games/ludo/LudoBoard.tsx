@@ -316,6 +316,63 @@ const HomeTokenOverlays = React.memo(({ players, tokens, movableSet, moveToken }
 ));
 HomeTokenOverlays.displayName = 'HomeTokenOverlays';
 
+// FinishedTokensOverlay: tokens at position 57, randomly scattered within the 3×3 center area
+function pseudoRandom(seed: string): [number, number] {
+  let h = 5381;
+  for (let i = 0; i < seed.length; i++) h = (((h << 5) + h) ^ seed.charCodeAt(i)) & 0xffffffff;
+  h = h >>> 0;
+  return [(h & 0xffff) / 0xffff, (h >>> 16) / 0xffff];
+}
+
+const TOKEN_SIZE_PCT = 30;
+
+const FinishedTokensOverlay = React.memo(({ tokens }: { tokens: Token[] }) => {
+  const finished = tokens.filter(t => t.position === 57);
+  if (finished.length === 0) return null;
+  const spread = 100 - TOKEN_SIZE_PCT;
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: `${(6 / 15) * 100}%`,
+        left: `${(6 / 15) * 100}%`,
+        width: `${(3 / 15) * 100}%`,
+        height: `${(3 / 15) * 100}%`,
+        zIndex: 5,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+      }}
+    >
+      {finished.map(token => {
+        const [rx, ry] = pseudoRandom(token.id);
+        return (
+          <div
+            key={token.id}
+            style={{
+              position: 'absolute',
+              left: `${rx * spread}%`,
+              top: `${ry * spread}%`,
+              width: `${TOKEN_SIZE_PCT}%`,
+              height: `${TOKEN_SIZE_PCT}%`,
+              borderRadius: '50%',
+              backgroundColor: COLOR[token.player].hex,
+              border: '2px solid rgba(255,255,255,0.85)',
+              boxShadow: 'inset 0 -3px 5px rgba(0,0,0,0.3), inset 0 3px 5px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxSizing: 'border-box',
+            }}
+          >
+            <span style={{ fontSize: '50%', lineHeight: 1, filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.5))' }}>👑</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+});
+FinishedTokensOverlay.displayName = 'FinishedTokensOverlay';
+
 // CenterPinwheel: static, never re-renders
 const PINWHEEL_SEGMENTS = [
   { color: '#43A047', clip: 'polygon(50% 50%, 0% 0%, 0% 100%)' },
@@ -356,6 +413,7 @@ const LudoBoard = React.memo<LudoBoardProps>(({
     <HomeQuadrantOverlays inactiveSet={inactiveSet} />
     <HomeTokenOverlays players={players} tokens={tokens} movableSet={movableSet} moveToken={moveToken} />
     <CenterPinwheel />
+    <FinishedTokensOverlay tokens={tokens} />
   </div>
 ));
 LudoBoard.displayName = 'LudoBoard';
