@@ -206,6 +206,10 @@ const Ludo: React.FC = () => {
         ? s.currentPlayerIndex
         : (s.currentPlayerIndex + 1) % s.players.length;
 
+      // Streak only carries when the only reason for another roll is the six itself.
+      // Captures and completions break the streak so bonus rolls don't count toward triple-six.
+      const streakCarries = samePlayerGoesAgain && captureCount === 0 && completionCount === 0;
+
       return {
         ...s,
         tokens: capturedTokens,
@@ -214,8 +218,8 @@ const Ludo: React.FC = () => {
         diceRolled: false,
         movableTokenIds: [],
         bonusRolls: samePlayerGoesAgain ? totalBonusRolls - 1 : 0,
-        consecutiveSixes: samePlayerGoesAgain ? s.consecutiveSixes : 0,
-        sixStreakSnapshot: samePlayerGoesAgain ? s.sixStreakSnapshot : null,
+        consecutiveSixes: streakCarries ? s.consecutiveSixes : 0,
+        sixStreakSnapshot: streakCarries ? s.sixStreakSnapshot : null,
       };
     });
   }, []);

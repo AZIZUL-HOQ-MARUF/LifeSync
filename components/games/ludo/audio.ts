@@ -95,25 +95,40 @@ export function playCaptureSound() {
     const ctx = getCtx();
     if (!ctx) return;
     const now = ctx.currentTime;
+
+    // "Tunggg" — light attack click then resonant ring-down
+    const clickLen = Math.floor(ctx.sampleRate * 0.006);
+    const clickBuf = ctx.createBuffer(1, clickLen, ctx.sampleRate);
+    const cd = clickBuf.getChannelData(0);
+    for (let i = 0; i < clickLen; i++) cd[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.0012));
+    const clickSrc = ctx.createBufferSource(); clickSrc.buffer = clickBuf;
+    const clickGain = ctx.createGain(); clickGain.gain.setValueAtTime(0.9, now);
+    clickSrc.connect(clickGain); clickGain.connect(ctx.destination);
+    clickSrc.start(now);
+
+    // Fundamental resonant tone: 650 → 480Hz, long funny tail
     const osc = ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(220, now);
-    osc.frequency.exponentialRampToValueAtTime(60, now + 0.08);
-    const oscGain = ctx.createGain();
-    oscGain.gain.setValueAtTime(1.2, now);
-    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-    osc.connect(oscGain); oscGain.connect(ctx.destination);
-    osc.start(now); osc.stop(now + 0.13);
-    const len = Math.floor(ctx.sampleRate * 0.015);
-    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.002));
-    const src = ctx.createBufferSource(); src.buffer = buf;
-    const filt = ctx.createBiquadFilter(); filt.type = 'bandpass';
-    filt.frequency.value = 1800; filt.Q.value = 1.5;
-    const gain = ctx.createGain(); gain.gain.setValueAtTime(1.0, now);
-    src.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
-    src.start(now);
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(650, now);
+    osc.frequency.exponentialRampToValueAtTime(480, now + 0.06);
+    osc.frequency.exponentialRampToValueAtTime(380, now + 0.45);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0, now);
+    g.gain.linearRampToValueAtTime(0.55, now + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(now); osc.stop(now + 0.49);
+
+    // Octave harmonic for brightness
+    const osc2 = ctx.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(1300, now);
+    osc2.frequency.exponentialRampToValueAtTime(960, now + 0.06);
+    const g2 = ctx.createGain();
+    g2.gain.setValueAtTime(0.18, now);
+    g2.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    osc2.connect(g2); g2.connect(ctx.destination);
+    osc2.start(now); osc2.stop(now + 0.19);
   } catch { /* audio unavailable */ }
 }
 
