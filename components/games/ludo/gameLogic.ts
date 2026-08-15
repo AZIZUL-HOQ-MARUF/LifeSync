@@ -84,7 +84,7 @@ export function computeMovable(tokens: Token[], player: PlayerColor, dice: numbe
           const absAhead = (START_INDEX[player] + t.position + step) % 52;
           if (hasDuoAt(tokens, absAhead, player)) {
             if (step < steps) return false;   // can't pass through opponent duo
-            if (!isInDuo) return false;       // single can't land on opponent duo
+            // step === steps: single may land on (climb) the duo; duo-on-duo also allowed
           }
         }
       }

@@ -127,6 +127,8 @@ Two or more same-color tokens on the same non-safe main-track cell form a **duo*
 - Duo can only move when `dice % 2 === 0` (even roll).
 - Duos **block** opponent singles from landing on or passing through their cell.
 - Duos can **capture** opponent singles (if not on a safe cell).
+- A single can **climb on** an opponent duo by landing exactly on its cell (`my_pos + dice === duo_pos`). The single coexists with the duo without capturing it. If the duo later moves forward, the single is left behind alone on that cell.
+- A single **cannot pass through** an opponent duo (`my_pos + dice > duo_pos` with duo in the path → blocked).
 - A third token on the same cell is a **single** that moves independently.
 
 Key functions: `isTokenInDuo(tokens, tokenId)`, `getDuoPartner(tokens, tokenId)`, `computeMovable` (handles duo filtering and blocking).
