@@ -21,4 +21,5 @@ export interface LudoState {
   consecutiveSixes: number;
   sixStreakSnapshot: Token[] | null;
   sixPenalty: boolean;
+  computerPlayers: PlayerColor[];
 }

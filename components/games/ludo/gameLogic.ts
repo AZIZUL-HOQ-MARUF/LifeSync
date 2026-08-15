@@ -114,4 +114,49 @@ export const INITIAL_STATE: LudoState = {
   consecutiveSixes: 0,
   sixStreakSnapshot: null,
   sixPenalty: false,
+  computerPlayers: [],
 };
+
+export function pickBestToken(
+  tokens: Token[],
+  movableIds: string[],
+  player: PlayerColor,
+  dice: number,
+): string {
+  let best = movableIds[0];
+  let bestScore = -Infinity;
+
+  for (const id of movableIds) {
+    const token = tokens.find(t => t.id === id)!;
+    const inDuo = isTokenInDuo(tokens, id);
+    const steps = inDuo ? dice / 2 : dice;
+    const newPos = token.position === -1 ? 1 : Math.min(token.position + steps, 57);
+
+    let score = 0;
+
+    if (newPos === 57) {
+      score += 1000;
+    } else if (token.position <= 51 && newPos >= 52) {
+      score += 600;
+    } else if (newPos >= 1 && newPos <= 51) {
+      const absNew = (START_INDEX[player] + newPos) % 52;
+      if (!SAFE_POSITIONS.has(absNew)) {
+        for (const op of (['red', 'blue', 'green', 'yellow'] as PlayerColor[])) {
+          if (op === player) continue;
+          const count = tokens.filter(t =>
+            t.player === op && t.position >= 1 && t.position <= 51 &&
+            (START_INDEX[op] + t.position) % 52 === absNew
+          ).length;
+          if (count === 1) { score += 800; break; }
+        }
+      }
+    }
+
+    score += newPos;
+    if (token.position === -1) score -= 5;
+
+    if (score > bestScore) { bestScore = score; best = id; }
+  }
+
+  return best;
+}

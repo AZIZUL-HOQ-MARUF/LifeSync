@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import type { PlayerColor, LudoState, Token } from './types';
 import { COLOR, PLAYER_LABEL } from './constants';
 import { getTokenGridPos, getMainTrackPos, isMainTrackSafe } from './board';
-import { buildInitialTokens, computeMovable, playersForCount, INITIAL_STATE, isTokenInDuo, getDuoPartner } from './gameLogic';
+import { buildInitialTokens, computeMovable, playersForCount, INITIAL_STATE, isTokenInDuo, getDuoPartner, pickBestToken } from './gameLogic';
 import { playDiceSound, playTokenSound, playCaptureSound, playCompletionSound } from './audio';
 import DiceButton from './DiceButton';
 import LudoBoard from './LudoBoard';
@@ -12,6 +12,7 @@ const boardSize = 'min(calc(100vw - 32px), min(calc(100vh - 140px), 480px))';
 const Ludo: React.FC = () => {
   const [state, setState] = useState<LudoState>(INITIAL_STATE);
   const [rolling, setRolling] = useState(false);
+  const [vsComputer, setVsComputer] = useState(false);
 
   useEffect(() => {
     if (state.phase === 'playing' || state.phase === 'finished') {
@@ -22,7 +23,7 @@ const Ludo: React.FC = () => {
     return () => { document.body.style.overflow = ''; };
   }, [state.phase]);
 
-  const startGame = useCallback((count: 2 | 3 | 4) => {
+  const startGame = useCallback((count: 2 | 3 | 4, withComputer: boolean) => {
     const players = playersForCount(count);
     setState({
       ...INITIAL_STATE,
@@ -30,6 +31,7 @@ const Ludo: React.FC = () => {
       playerCount: count,
       players,
       tokens: buildInitialTokens(players),
+      computerPlayers: withComputer && count === 2 ? ['blue'] : [],
     });
   }, []);
 
@@ -248,6 +250,33 @@ const Ludo: React.FC = () => {
 
   const movableSet = useMemo(() => new Set<string>(state.movableTokenIds), [state.movableTokenIds]);
 
+  const isComputerTurn = state.phase === 'playing' &&
+    state.computerPlayers.includes(state.players[state.currentPlayerIndex]);
+
+  // ── Computer AI ─────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!isComputerTurn || rolling) return;
+    const cp = state.players[state.currentPlayerIndex];
+
+    if (!state.diceRolled) {
+      const t = setTimeout(() => rollDice(), 900);
+      return () => clearTimeout(t);
+    }
+
+    if (state.movableTokenIds.length > 0 && state.diceValue !== null) {
+      const t = setTimeout(() => {
+        moveToken(pickBestToken(state.tokens, state.movableTokenIds, cp, state.diceValue!));
+      }, 700);
+      return () => clearTimeout(t);
+    }
+  }, [
+    isComputerTurn, rolling, state.diceRolled,
+    state.movableTokenIds, state.tokens, state.diceValue,
+    state.currentPlayerIndex, state.players,
+    rollDice, moveToken,
+  ]);
+
   // ── Setup screen ────────────────────────────────────────────────────────────
 
   if (state.phase === 'setup') {
@@ -263,7 +292,10 @@ const Ludo: React.FC = () => {
             {([2, 3, 4] as const).map(n => (
               <button
                 key={n}
-                onClick={() => setState(s => ({ ...s, playerCount: n }))}
+                onClick={() => {
+                  setState(s => ({ ...s, playerCount: n }));
+                  if (n !== 2) setVsComputer(false);
+                }}
                 className={`w-16 h-16 rounded-2xl text-2xl font-bold shadow transition-all ${
                   state.playerCount === n
                     ? 'bg-indigo-500 text-white scale-110 shadow-indigo-300 shadow-lg'
@@ -274,6 +306,17 @@ const Ludo: React.FC = () => {
               </button>
             ))}
           </div>
+          {state.playerCount === 2 && (
+            <label className="flex items-center gap-2 mt-3 cursor-pointer select-none justify-center">
+              <input
+                type="checkbox"
+                checked={vsComputer}
+                onChange={e => setVsComputer(e.target.checked)}
+                className="w-4 h-4 accent-indigo-500"
+              />
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Play vs Computer</span>
+            </label>
+          )}
         </div>
         <div className="flex gap-2 justify-center flex-wrap">
           {playersForCount(state.playerCount).map(p => (
@@ -284,7 +327,7 @@ const Ludo: React.FC = () => {
           ))}
         </div>
         <button
-          onClick={() => startGame(state.playerCount)}
+          onClick={() => startGame(state.playerCount, vsComputer)}
           className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 active:scale-95 text-white font-bold rounded-xl shadow-lg transition-all text-lg"
         >
           Start Game
@@ -296,7 +339,7 @@ const Ludo: React.FC = () => {
   // ── Playing / Finished ──────────────────────────────────────────────────────
 
   const currentPlayer = state.players[state.currentPlayerIndex];
-  const canRoll = !state.diceRolled && !rolling;
+  const canRoll = !state.diceRolled && !rolling && !isComputerTurn;
 
   return (
     <div
@@ -429,7 +472,7 @@ const Ludo: React.FC = () => {
           </div>
         </div>
         <span style={{ background: 'rgba(0,0,0,0.4)', borderRadius: 4, padding: '2px 8px', color: 'rgba(255,255,255,0.9)', fontSize: 11, fontWeight: 600 }}>
-          {PLAYER_LABEL[currentPlayer]}
+          {isComputerTurn ? '🤖 Computer' : PLAYER_LABEL[currentPlayer]}
         </span>
       </div>
 
