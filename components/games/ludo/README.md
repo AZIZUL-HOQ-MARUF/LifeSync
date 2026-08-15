@@ -167,15 +167,26 @@ Enabled via "Play vs Computer" checkbox on the 2-player setup screen. Computer p
 - 900ms delay → calls `rollDice()`
 - 700ms delay after dice lands → calls `moveToken(pickBestToken(...))`
 
-**`pickBestToken`** in `gameLogic.ts` scores each movable token by priority:
+**`pickBestToken`** in `gameLogic.ts` scores each movable token:
 
-| Priority | Score |
-|----------|-------|
+| Situation | Score |
+|-----------|-------|
 | Complete a token (reach 57) | +1000 |
-| Capture an opponent single | +800 |
+| Capture opponent single (further along = higher) | +800 + opPosition |
 | Enter home column | +600 |
-| Advancement (furthest first) | +newPosition |
-| Entering from home base | −5 (slight penalty vs. advancing) |
+| Form a duo with own token | +300 |
+| Land on a safe cell | +200 |
+| Advancement | +newPosition |
+| Landing cell reachable by opponent in 1–6 moves | −150 |
+| Entering from home base | −5 |
+
+**Danger detection**: for each candidate landing cell, the AI checks every opponent token on the main track. If any opponent is 1–6 steps behind (i.e., `(absLanding - absOpponent + 52) % 52 ∈ [1,6]`), the move is flagged as dangerous and penalised. Safe cells bypass this check entirely (they can't be captured on).
+
+**Duo formation**: if the AI already has a token at the landing position and the cell is non-safe, landing there forms a blocking duo — a strong defensive move that also locks opponents out of that cell.
+
+**Capture preference**: when multiple captures are available, the AI targets the opponent token with the highest `position` value (closest to finishing), since that token is the biggest threat.
+
+All scores are additive so combinations stack — e.g. capturing a high-position token on a safe cell scores higher than either alone. The AI still falls back to the highest-scoring option even when all candidates are dangerous.
 
 The dice button is disabled and the avatar shows "🤖 Computer" during AI turns. The AI reuses the same `rollDice` and `moveToken` functions as the human player.
 
