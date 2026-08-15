@@ -261,14 +261,14 @@ const Ludo: React.FC = () => {
     const cp = state.players[state.currentPlayerIndex];
 
     if (!state.diceRolled) {
-      const t = setTimeout(() => rollDice(), 900);
+      const t = setTimeout(() => rollDice(), 1000);
       return () => clearTimeout(t);
     }
 
     if (state.movableTokenIds.length > 0 && state.diceValue !== null) {
       const t = setTimeout(() => {
         moveToken(pickBestToken(state.tokens, state.movableTokenIds, cp, state.diceValue!));
-      }, 700);
+      }, 1000);
       return () => clearTimeout(t);
     }
   }, [
