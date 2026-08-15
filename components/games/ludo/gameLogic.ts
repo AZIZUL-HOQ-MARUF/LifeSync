@@ -135,24 +135,57 @@ export function pickBestToken(
     let score = 0;
 
     if (newPos === 57) {
+      // Completing a token is the top priority
       score += 1000;
     } else if (token.position <= 51 && newPos >= 52) {
+      // Entering the home column — safe from capture
       score += 600;
     } else if (newPos >= 1 && newPos <= 51) {
       const absNew = (START_INDEX[player] + newPos) % 52;
-      if (!SAFE_POSITIONS.has(absNew)) {
+
+      if (SAFE_POSITIONS.has(absNew)) {
+        // Safe cell: immune to capture, always desirable
+        score += 200;
+      } else {
+        // Check if any opponent can reach this cell on their next roll (1–6 steps)
+        let danger = false;
         for (const op of (['red', 'blue', 'green', 'yellow'] as PlayerColor[])) {
           if (op === player) continue;
-          const count = tokens.filter(t =>
+          for (const t of tokens) {
+            if (t.player !== op || t.position < 1 || t.position > 51) continue;
+            const opAbs = (START_INDEX[op] + t.position) % 52;
+            const dist = (absNew - opAbs + 52) % 52;
+            if (dist >= 1 && dist <= 6) { danger = true; break; }
+          }
+          if (danger) break;
+        }
+        if (danger) score -= 150;
+
+        // Capture: prefer sending further-along (more dangerous) tokens home
+        for (const op of (['red', 'blue', 'green', 'yellow'] as PlayerColor[])) {
+          if (op === player) continue;
+          const opAtCell = tokens.filter(t =>
             t.player === op && t.position >= 1 && t.position <= 51 &&
             (START_INDEX[op] + t.position) % 52 === absNew
-          ).length;
-          if (count === 1) { score += 800; break; }
+          );
+          if (opAtCell.length === 1) {
+            score += 800 + opAtCell[0].position; // higher position = bigger threat
+            break;
+          }
         }
+
+        // Duo formation: landing where we already have a token creates a blocking duo
+        const ownAtNewPos = tokens.filter(t =>
+          t.player === player && t.id !== id && t.position === newPos
+        ).length;
+        if (ownAtNewPos === 1) score += 300;
       }
     }
 
+    // Prefer advancing tokens that are further along (closer to finishing)
     score += newPos;
+
+    // Slight penalty for entering from home base vs. advancing an existing token
     if (token.position === -1) score -= 5;
 
     if (score > bestScore) { bestScore = score; best = id; }
