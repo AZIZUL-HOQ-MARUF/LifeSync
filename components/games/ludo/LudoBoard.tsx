@@ -28,6 +28,8 @@ interface LudoBoardProps {
   inactiveSet: ReadonlySet<PlayerColor>;
 }
 
+const EMPTY_SET: ReadonlySet<PlayerColor> = new Set();
+
 const BOARD_CONTAINER_STYLE: React.CSSProperties = {
   background: '#ecf0f1',
   borderRadius: 8,
@@ -46,7 +48,7 @@ const GRID_STYLE: React.CSSProperties = {
 };
 
 // BoardGrid: purely structural — re-renders only when inactiveSet changes (fixed at game start)
-const BoardGrid = React.memo(({ inactiveSet }: { inactiveSet: ReadonlySet<PlayerColor> }) => (
+const BoardGrid = React.memo(({ inactiveSet = EMPTY_SET }: { inactiveSet?: ReadonlySet<PlayerColor> }) => (
   <div style={GRID_STYLE}>
     {Array.from({ length: 225 }, (_, i) => {
       const row = Math.floor(i / 15);
@@ -190,7 +192,7 @@ const TokenLayer = React.memo(({ tokensByCell, movableSet, moveToken }: {
 TokenLayer.displayName = 'TokenLayer';
 
 // HomeQuadrantOverlays: decorative corners — never re-renders during gameplay
-const HomeQuadrantOverlays = React.memo(({ inactiveSet }: { inactiveSet: ReadonlySet<PlayerColor> }) => (
+const HomeQuadrantOverlays = React.memo(({ inactiveSet = EMPTY_SET }: { inactiveSet?: ReadonlySet<PlayerColor> }) => (
   <>
     {(['red', 'blue', 'green', 'yellow'] as PlayerColor[]).map(p => (
       <div
