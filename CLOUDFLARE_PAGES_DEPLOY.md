@@ -126,7 +126,7 @@ Every time you push to `main` branch:
 **Keep GitHub Pages as backup:**
 - Both can run simultaneously
 - GitHub Pages: `https://azizul-hoq-maruf.github.io/LifeSync/`
-- Cloudflare Pages: `https://lifesync.pages.dev`
+- Cloudflare Pages: https://lifesync-f26.pages.dev
 
 **Switch primary:**
 - Update links to Cloudflare Pages URL
