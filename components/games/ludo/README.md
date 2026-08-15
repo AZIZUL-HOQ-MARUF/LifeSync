@@ -163,9 +163,21 @@ useEffect(() => { rollStateRef.current = { ... }; }); // runs after every render
 
 Enabled via "Play vs Computer" checkbox on the 2-player setup screen. Computer plays as **Blue**; human plays as **Green**.
 
-**How it works**: A `useEffect` in `index.tsx` watches for `isComputerTurn`. When it's the computer's turn:
-- 900ms delay → calls `rollDice()`
-- 700ms delay after dice lands → calls `moveToken(pickBestToken(...))`
+**How it works**: A `useEffect` in `index.tsx` watches for `isComputerTurn`. The effect has `state.diceRolled` in its dependency array, so it re-fires on every state transition the computer needs to act on:
+
+```
+human moves
+  → 1s → computer rolls dice       (diceRolled: false → true)
+  → 1s → computer moves token      (diceRolled: true, movableTokenIds non-empty)
+  → if bonus rolls remain: diceRolled flips back to false → effect re-fires
+  → 1s → computer rolls again ...  (cycle repeats until bonusRolls === 0)
+```
+
+**Bonus roll handling**: after `moveToken` resolves with `bonusRolls > 0`, `diceRolled` returns to `false` and `currentPlayerIndex` stays the same. The effect detects this and starts the 1s roll timer automatically — no special bonus-roll logic needed.
+
+**Triple-six penalty during computer turn**: when `sixPenalty: true`, `diceRolled` is `true` and `movableTokenIds` is empty, so both effect branches are skipped. The 1400ms rollback timer in `rollDice` fires independently, resets state, and passes the turn.
+
+**Delays**: both the roll and the move use a 1000ms `setTimeout` so the human can follow each step.
 
 **`pickBestToken`** in `gameLogic.ts` scores each movable token:
 
