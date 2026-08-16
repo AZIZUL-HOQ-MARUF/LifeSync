@@ -170,12 +170,12 @@ const Ludo: React.FC = () => {
         return { ...t, position: -1 };
       });
 
-      // Count opponent tokens newly sent to home base
+      // 1 if any opponent tokens were sent home this move (duo counts as 1, not 2)
       let captureCount = 0;
       for (const afterToken of capturedTokens) {
         if (afterToken.player === currentPlayer || afterToken.position !== -1) continue;
         const beforeInMove = tokensAfterMove.find(t => t.id === afterToken.id)!;
-        if (beforeInMove.position !== -1) captureCount++;
+        if (beforeInMove.position !== -1) { captureCount = 1; break; }
       }
 
       // Count current player's tokens newly reaching the finish

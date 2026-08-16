@@ -110,10 +110,10 @@ moveToken(tokenId)
 | Trigger | Extra rolls granted |
 |---------|-------------------|
 | Roll a 6 | +1 |
-| Capture N opponent tokens | +N |
+| Capture (any number of tokens in one move) | +1 |
 | Complete N own tokens (reach 57) | +N |
 
-Bonuses stack. `bonusRolls` after a move = `totalEarned - 1` (the -1 pre-allocates the next roll).
+A duo elimination (capturing 2 opponent tokens in one move) still awards only +1, same as a single capture. Bonuses stack. `bonusRolls` after a move = `totalEarned - 1` (the -1 pre-allocates the next roll).
 
 **Triple-six penalty**: only counts *direct* six rolls. If a bonus roll comes from a capture or completion (`captureCount > 0 || completionCount > 0`), `consecutiveSixes` resets to `0` and `sixStreakSnapshot` is cleared. Example: 6 → 6 → capture bonus → 6 = streak stays at 1, not 3.
 
