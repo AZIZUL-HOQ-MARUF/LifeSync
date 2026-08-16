@@ -169,7 +169,13 @@ export function pickBestToken(
             (START_INDEX[op] + t.position) % 52 === absNew
           );
           if (opAtCell.length === 1) {
-            score += 800 + opAtCell[0].position; // higher position = bigger threat
+            // Single or duo captures an opponent single
+            score += 800 + opAtCell[0].position;
+            break;
+          } else if (opAtCell.length >= 2 && inDuo) {
+            // Duo captures an opponent duo — sends 2 tokens home, very powerful
+            const maxPos = Math.max(...opAtCell.map(t => t.position));
+            score += 800 * opAtCell.length + maxPos;
             break;
           }
         }
