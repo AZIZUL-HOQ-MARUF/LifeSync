@@ -112,6 +112,9 @@ const PrayerPage: React.FC = () => {
   const [isPushSubscribed, setIsPushSubscribed] = useState(false);
   const [isPushLoading, setIsPushLoading] = useState(false);
   const [showNotifModal, setShowNotifModal] = useState(false);
+  const [locationName, setLocationName] = useState<string | null>(
+    () => localStorage.getItem('ls_prayer_location_name')
+  );
 
   const lastFetchedDateRef = useRef<string | null>(null);
   const hasCachedCoordsRef = useRef(false);
@@ -230,6 +233,30 @@ const PrayerPage: React.FC = () => {
     );
   }, []);
 
+  // Reverse-geocode coords → human-readable city name, cached by rounded coords
+  useEffect(() => {
+    if (!coords) return;
+    const key = `${Math.round(coords.lat * 10) / 10},${Math.round(coords.lon * 10) / 10}`;
+    if (localStorage.getItem('ls_prayer_location_key') === key) return;
+    fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${coords.lat}&lon=${coords.lon}&format=json`,
+      { headers: { 'Accept-Language': 'en', 'User-Agent': 'LifeSync-PWA/1.0' } }
+    )
+      .then(r => r.json())
+      .then(data => {
+        const addr = data.address ?? {};
+        const city = addr.city || addr.town || addr.village || addr.county || addr.state || '';
+        const country = (addr.country_code ?? '').toUpperCase();
+        const name = [city, country].filter(Boolean).join(', ');
+        if (name) {
+          setLocationName(name);
+          localStorage.setItem('ls_prayer_location_name', name);
+          localStorage.setItem('ls_prayer_location_key', key);
+        }
+      })
+      .catch(() => {});
+  }, [coords]);
+
   // Show first-visit notification prompt after 1.5s if not yet asked
   useEffect(() => {
     if (!('PushManager' in window)) return;
@@ -329,6 +356,9 @@ const PrayerPage: React.FC = () => {
       setPrayerData(result);
       lastFetchedDateRef.current = result.gregorianDate;
       localStorage.setItem('ls_prayer_data', JSON.stringify(result));
+      const name = [cityInput.trim(), (countryInput.trim() || 'US').toUpperCase()].join(', ');
+      setLocationName(name);
+      localStorage.setItem('ls_prayer_location_name', name);
     } else {
       setFetchError('City not found. Try e.g. "Dhaka" with country "BD".');
     }
@@ -343,10 +373,18 @@ const PrayerPage: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold flex items-center gap-2 text-gray-800 dark:text-white">
-          <Moon className="text-indigo-500 w-7 h-7" />
-          Prayer Times
-        </h2>
+        <div className="flex items-center gap-2">
+          <Moon className="text-indigo-500 w-7 h-7 shrink-0" />
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white leading-tight">Prayer Times</h2>
+            {locationName && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-0.5">
+                <MapPin size={10} />
+                {locationName}
+              </p>
+            )}
+          </div>
+        </div>
         <div className="flex items-center gap-1">
           {'PushManager' in window && (
             <button
