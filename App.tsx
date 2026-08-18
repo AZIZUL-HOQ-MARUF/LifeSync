@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import TasksPage from './pages/TasksPage';
@@ -8,22 +8,8 @@ import PrayerPage from './pages/PrayerPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import { AuthProvider } from './context/AuthContext';
-import { oneSignalService } from './services/oneSignalService';
 
 function App() {
-  useEffect(() => {
-    // Initialize OneSignal when app loads (only on production domain)
-    const oneSignalAppId = import.meta.env.VITE_ONESIGNAL_APP_ID;
-    const isProduction = window.location.hostname !== 'localhost';
-    
-    if (oneSignalAppId && isProduction) {
-      oneSignalService.initialize(oneSignalAppId);
-    } else if (!isProduction) {
-      console.log('OneSignal skipped on localhost');
-    } else {
-      console.warn('OneSignal App ID not found. Add VITE_ONESIGNAL_APP_ID to .env.local');
-    }
-  }, []);
 
   return (
     <HashRouter>

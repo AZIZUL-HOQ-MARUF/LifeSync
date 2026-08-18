@@ -16,7 +16,7 @@ There are no test, lint, or format scripts configured.
 
 Create a `.env.local` file with:
 - `VITE_GEMINI_PROXY_URL` — URL of the deployed Cloudflare Worker (`cloudflare-worker/`)
-- `VITE_ONESIGNAL_APP_ID` — OneSignal app ID (only applied in production; skipped on localhost)
+- `VITE_VAPID_PUBLIC_KEY` — VAPID public key for Web Push (generated with `web-push generate-vapid-keys`)
 
 ## Architecture
 
@@ -44,4 +44,4 @@ Create a `.env.local` file with:
 - **Mock authentication** — `LoginPage` accepts any email + non-empty password; `cloudService.login` derives a user ID from `btoa(email)` and ignores the password.
 - **Service worker** — `public/sw.js` handles caching, push, and background sync. It is registered both in `index.html` (inline) and in `index.tsx`, which can result in duplicate registrations.
 - **TypeScript config** — `noEmit: true` with `allowImportingTsExtensions: true`; Vite handles transpilation, tsc is type-checking only.
-- **Task reminders** — `TasksPage` polls every 15 seconds checking for due tasks and fires browser push notifications via `notificationService.ts` / `oneSignalService.ts`.
+- **Task reminders** — `TasksPage` polls every 15 seconds for browser-open notifications (`notificationService.ts`), plus offline push via the Cloudflare Worker cron + Web Push API.
