@@ -111,6 +111,7 @@ const PrayerPage: React.FC = () => {
   );
   const [isPushSubscribed, setIsPushSubscribed] = useState(false);
   const [isPushLoading, setIsPushLoading] = useState(false);
+  const [showNotifModal, setShowNotifModal] = useState(false);
 
   const lastFetchedDateRef = useRef<string | null>(null);
   const coordsRef = useRef(coords);
@@ -197,6 +198,18 @@ const PrayerPage: React.FC = () => {
     );
   }, []);
 
+  // Show first-visit notification prompt after 1.5s if not yet asked
+  useEffect(() => {
+    if (!('PushManager' in window)) return;
+    if (localStorage.getItem('ls_prayer_notif_shown')) return;
+    if ('Notification' in window && Notification.permission === 'granted') {
+      localStorage.setItem('ls_prayer_notif_shown', 'true');
+      return;
+    }
+    const timer = setTimeout(() => setShowNotifModal(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleTogglePushNotifications = useCallback(async () => {
     const WORKER_URL = (import.meta.env.VITE_GEMINI_PROXY_URL as string) ?? '';
     const VAPID_KEY = (import.meta.env.VITE_VAPID_PUBLIC_KEY as string) ?? '';
@@ -259,6 +272,17 @@ const PrayerPage: React.FC = () => {
     }
   }, [isPushSubscribed, coords, method]);
 
+  const handleNotifModalEnable = useCallback(async () => {
+    localStorage.setItem('ls_prayer_notif_shown', 'true');
+    setShowNotifModal(false);
+    await handleTogglePushNotifications();
+  }, [handleTogglePushNotifications]);
+
+  const handleNotifModalDismiss = useCallback(() => {
+    localStorage.setItem('ls_prayer_notif_shown', 'true');
+    setShowNotifModal(false);
+  }, []);
+
   const handleCitySearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cityInput.trim()) return;
@@ -291,12 +315,38 @@ const PrayerPage: React.FC = () => {
           <Moon className="text-indigo-500 w-7 h-7" />
           Prayer Times
         </h2>
-        <button
-          onClick={() => setShowMethodPicker((p) => !p)}
-          className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-        >
-          {showMethodPicker ? <X size={20} /> : <SlidersHorizontal size={20} />}
-        </button>
+        <div className="flex items-center gap-1">
+          {'PushManager' in window && (
+            <button
+              onClick={handleTogglePushNotifications}
+              disabled={isPushLoading || notifPermission === 'denied'}
+              title={
+                notifPermission === 'denied'
+                  ? 'Notifications blocked in browser settings'
+                  : isPushSubscribed
+                  ? 'Disable prayer notifications'
+                  : 'Enable prayer notifications'
+              }
+              className={`p-2 rounded-xl transition-colors disabled:opacity-40 ${
+                isPushSubscribed
+                  ? 'text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30'
+                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
+              }`}
+            >
+              {isPushLoading ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : (
+                <Bell size={20} className={isPushSubscribed ? 'fill-indigo-500 text-indigo-500' : ''} />
+              )}
+            </button>
+          )}
+          <button
+            onClick={() => setShowMethodPicker((p) => !p)}
+            className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+          >
+            {showMethodPicker ? <X size={20} /> : <SlidersHorizontal size={20} />}
+          </button>
+        </div>
       </div>
 
       {/* Method Picker */}
@@ -394,32 +444,6 @@ const PrayerPage: React.FC = () => {
             <div className="text-xs opacity-60 mt-1">remaining</div>
           </div>
 
-          {/* Push notification toggle */}
-          {'PushManager' in window && (
-            <button
-              onClick={handleTogglePushNotifications}
-              disabled={isPushLoading || notifPermission === 'denied'}
-              className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 ${
-                isPushSubscribed
-                  ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/60'
-                  : 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
-              }`}
-            >
-              {isPushLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Bell className={`w-4 h-4 ${isPushSubscribed ? 'fill-indigo-500 text-indigo-500' : ''}`} />
-              )}
-              {isPushLoading
-                ? 'Processing...'
-                : isPushSubscribed
-                ? 'Notifications On — Tap to disable'
-                : notifPermission === 'denied'
-                ? 'Notifications blocked in browser settings'
-                : 'Enable Prayer Notifications'}
-            </button>
-          )}
-
           {/* Prayer time cards */}
           <div className="space-y-3">
             {PRAYER_NAMES.map((name) => {
@@ -494,6 +518,40 @@ const PrayerPage: React.FC = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* First-visit notification permission modal */}
+      {showNotifModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 max-w-sm w-full space-y-4 border border-gray-100 dark:border-slate-700">
+            <div className="flex justify-center gap-3 text-indigo-500">
+              <Moon className="w-8 h-8" />
+              <Bell className="w-8 h-8" />
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                Enable Prayer Notifications
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Get notified when each prayer time starts, even when the app is closed.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={handleNotifModalEnable}
+                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-colors"
+              >
+                Enable
+              </button>
+              <button
+                onClick={handleNotifModalDismiss}
+                className="w-full py-2.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-600 dark:text-gray-300 rounded-xl text-sm font-medium transition-colors"
+              >
+                Not now
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
