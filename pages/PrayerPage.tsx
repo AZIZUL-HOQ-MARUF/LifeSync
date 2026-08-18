@@ -114,6 +114,7 @@ const PrayerPage: React.FC = () => {
   const [showNotifModal, setShowNotifModal] = useState(false);
 
   const lastFetchedDateRef = useRef<string | null>(null);
+  const hasCachedCoordsRef = useRef(false);
   const coordsRef = useRef(coords);
   coordsRef.current = coords;
   const methodRef = useRef(method);
@@ -131,6 +132,7 @@ const PrayerPage: React.FC = () => {
         const c = JSON.parse(cachedCoords);
         setCoords(c);
         setGeoStatus('granted');
+        hasCachedCoordsRef.current = true;
       } catch { /* ignore */ }
     }
   }, []);
@@ -154,19 +156,49 @@ const PrayerPage: React.FC = () => {
   // Request geolocation on mount
   useEffect(() => {
     if (!navigator.geolocation) {
-      setGeoStatus('denied');
+      if (!hasCachedCoordsRef.current) setGeoStatus('denied');
       return;
     }
+
+    const onSuccess = (pos: GeolocationPosition) => {
+      const c = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+      setCoords(c);
+      setGeoStatus('granted');
+      localStorage.setItem('ls_prayer_coords', JSON.stringify(c));
+    };
+
+    if (hasCachedCoordsRef.current) {
+      // Silently refresh coords in background; never touch geoStatus or UI
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const c = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+          setCoords(c);
+          localStorage.setItem('ls_prayer_coords', JSON.stringify(c));
+        },
+        () => { /* keep using cached coords */ },
+        { timeout: 10000, maximumAge: 300000, enableHighAccuracy: false }
+      );
+      return;
+    }
+
+    // First visit — no cached coords
     setGeoStatus('detecting');
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const c = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-        setCoords(c);
-        setGeoStatus('granted');
-        localStorage.setItem('ls_prayer_coords', JSON.stringify(c));
+      onSuccess,
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) {
+          // User explicitly blocked — show city search form
+          setGeoStatus('denied');
+        } else {
+          // Timeout or position unavailable — retry with coarse network location
+          navigator.geolocation.getCurrentPosition(
+            onSuccess,
+            () => setGeoStatus('denied'),
+            { timeout: 20000, maximumAge: 600000, enableHighAccuracy: false }
+          );
+        }
       },
-      () => setGeoStatus('denied'),
-      { timeout: 10000, maximumAge: 300000 }
+      { timeout: 8000, maximumAge: 300000, enableHighAccuracy: false }
     );
   }, []);
 
