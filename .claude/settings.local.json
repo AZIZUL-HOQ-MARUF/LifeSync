@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\Azizul_Hoq\\\\Practice\\\\React\\\\LifeSync\\\\components\" | ForEach-Object { $_.FullName })",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\Azizul_Hoq\\\\Practice\\\\React\\\\LifeSync\\\\pages\" | ForEach-Object { $_.FullName })",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\Azizul_Hoq\\\\Practice\\\\React\\\\LifeSync\\\\components\\\\games\" | ForEach-Object { $_.FullName })",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\Azizul_Hoq\\\\Practice\\\\React\\\\LifeSync\\\\context\" | ForEach-Object { $_.FullName }; Get-ChildItem \"C:\\\\Users\\\\Azizul_Hoq\\\\Practice\\\\React\\\\LifeSync\\\\services\" | ForEach-Object { $_.FullName })",
+      "Bash(node *)",
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(git push *)",
+      "Bash(npx wrangler *)",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\Azizul_Hoq\\\\Practice\\\\React\\\\LifeSync\\\\components\\\\games\\\\ludo\")",
+      "Bash(Out-Null)",
+      "Bash(Write-Host \"done\")",
+      "WebSearch",
+      "WebFetch(domain:aladhan.com)",
+      "WebFetch(domain:api.aladhan.com)",
+      "WebFetch(domain:batoulapps.github.io)",
+      "WebFetch(domain:github.com)",
+      "Bash(dir C:\\\\Users\\\\Azizul_Hoq\\\\Practice\\\\React\\\\LifeSync /b /a:-h)"
+    ]
+  }
+}

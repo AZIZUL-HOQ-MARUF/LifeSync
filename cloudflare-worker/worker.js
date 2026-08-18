@@ -107,7 +107,63 @@ async function getPrayerTimings(lat, lon, method, timezone, env) {
 }
 
 // ---------------------------------------------------------------------------
-// Cron handler — fires every 10 minutes via [triggers] crons in wrangler.toml
+// Cron handler — task push notifications
+// ---------------------------------------------------------------------------
+
+async function handleTaskScheduled(env) {
+  const vapidKeys = {
+    publicKey: env.VAPID_PUBLIC_KEY,
+    privateKey: env.VAPID_PRIVATE_KEY,
+    subject: env.VAPID_SUBJECT,
+  };
+
+  const allKeys = [];
+  let cursor;
+  do {
+    const result = await env.PRAYER_SUBS.list({ prefix: 'tasks:', cursor, limit: 1000 });
+    allKeys.push(...result.keys);
+    cursor = result.list_complete ? undefined : result.cursor;
+  } while (cursor);
+
+  if (allKeys.length === 0) return;
+
+  await Promise.allSettled(
+    allKeys.map(async ({ name }) => {
+      const data = await env.PRAYER_SUBS.get(name, { type: 'json' });
+      if (!data) return;
+      const { subscription, tasks } = data;
+      const now = Date.now();
+      const endpointHash = await sha256Hex(subscription.endpoint);
+
+      for (const task of tasks) {
+        const dueMs = new Date(task.dueDate).getTime();
+        const diffMs = now - dueMs;
+        // Window: [0, 11 min] after due time (matches 10-min cron + 1 min grace)
+        if (diffMs < 0 || diffMs > 11 * 60 * 1000) continue;
+
+        const dedupKey = `tasksent:${endpointHash.slice(0, 16)}:${task.id}`;
+        if (await env.PRAYER_SUBS.get(dedupKey)) continue;
+        await env.PRAYER_SUBS.put(dedupKey, '1', { expirationTtl: 900 });
+
+        try {
+          const resp = await sendWebPush(
+            subscription,
+            { title: 'Task Due', body: task.title, icon: './icon-192.png', badge: './icon-192.png' },
+            vapidKeys
+          );
+          if (resp.status === 410 || resp.status === 404) {
+            await env.PRAYER_SUBS.delete(name);
+          }
+        } catch (err) {
+          console.error(`task push failed for ${task.id}:`, err.message);
+        }
+      }
+    })
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Cron handler — prayer push notifications
 // ---------------------------------------------------------------------------
 
 async function handleScheduled(env) {
@@ -234,6 +290,40 @@ export default {
       }
     }
 
+    // POST /sync-tasks
+    if (request.method === 'POST' && pathname === '/sync-tasks') {
+      try {
+        const { subscription, tasks } = await request.json();
+        if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
+          return jsonResponse({ error: 'Invalid subscription object' }, 400, origin);
+        }
+        if (!Array.isArray(tasks)) {
+          return jsonResponse({ error: 'tasks must be an array' }, 400, origin);
+        }
+        const hash = await sha256Hex(subscription.endpoint);
+        await env.PRAYER_SUBS.put(
+          `tasks:${hash}`,
+          JSON.stringify({ subscription, tasks, updatedAt: new Date().toISOString() })
+        );
+        return jsonResponse({ ok: true }, 200, origin);
+      } catch (err) {
+        return jsonResponse({ error: err.message }, 500, origin);
+      }
+    }
+
+    // DELETE /sync-tasks
+    if (request.method === 'DELETE' && pathname === '/sync-tasks') {
+      try {
+        const { endpoint } = await request.json();
+        if (!endpoint) return jsonResponse({ error: 'Missing endpoint' }, 400, origin);
+        const hash = await sha256Hex(endpoint);
+        await env.PRAYER_SUBS.delete(`tasks:${hash}`);
+        return jsonResponse({ ok: true }, 200, origin);
+      } catch (err) {
+        return jsonResponse({ error: err.message }, 500, origin);
+      }
+    }
+
     // All other POSTs → Gemini proxy (unchanged from original)
     if (request.method !== 'POST') {
       return new Response('Method not allowed', { status: 405 });
@@ -269,6 +359,6 @@ export default {
   },
 
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(handleScheduled(env));
+    ctx.waitUntil(Promise.allSettled([handleScheduled(env), handleTaskScheduled(env)]));
   },
 };
