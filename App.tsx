@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import TasksPage from './pages/TasksPage';
 import GamesPage from './pages/GamesPage';
 import ClockPage from './pages/ClockPage';
+import PrayerPage from './pages/PrayerPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import { AuthProvider } from './context/AuthContext';
@@ -32,6 +33,7 @@ function App() {
             <Route path="/" element={<TasksPage />} />
             <Route path="/games" element={<GamesPage />} />
             <Route path="/clock" element={<ClockPage />} />
+            <Route path="/prayer" element={<PrayerPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />

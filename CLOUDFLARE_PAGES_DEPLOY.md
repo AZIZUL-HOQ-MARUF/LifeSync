@@ -63,19 +63,19 @@ Click **Add variable** for each:
 
 1. Click **Save and Deploy**
 2. Wait ~2 minutes for build
-3. Your site will be live at: `https://lifesync.pages.dev` // or something similar
+3. Your site will be live at: `https://lifesync-f26.pages.dev` // or something similar
 
 ### 6. Update OneSignal Dashboard
 
 1. Go to OneSignal Dashboard: https://onesignal.com/
 2. Select your **LifeSync** app
 3. Go to **Settings** → **Configuration**
-4. Update **Site URL** to: `https://lifesync.pages.dev` // the deployed version url
+4. Update **Site URL** to: `https://lifesync-f26.pages.dev` // the deployed version url
 5. Click **Save**
 
 ## Testing
 
-1. Visit: `https://lifesync.pages.dev`
+1. Visit: `https://lifesync-f26.pages.dev`
 2. Try creating a task with AI: "Buy milk tomorrow at 5pm"
 3. Check if OneSignal prompt appears
 4. Grant notification permission
@@ -126,7 +126,7 @@ Every time you push to `main` branch:
 **Keep GitHub Pages as backup:**
 - Both can run simultaneously
 - GitHub Pages: `https://azizul-hoq-maruf.github.io/LifeSync/`
-- Cloudflare Pages: https://lifesync-f26.pages.dev
+- Cloudflare Pages: `https://lifesync-f26.pages.dev`
 
 **Switch primary:**
 - Update links to Cloudflare Pages URL

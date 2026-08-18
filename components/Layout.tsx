@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { CheckSquare, Gamepad2, Clock, Settings, Zap, Cloud, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { CheckSquare, Gamepad2, Clock, Moon, Settings, Zap, Cloud, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface LayoutProps {
@@ -14,6 +14,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { to: '/', icon: CheckSquare, label: 'Tasks' },
     { to: '/games', icon: Gamepad2, label: 'Games' },
     { to: '/clock', icon: Clock, label: 'Clock' },
+    { to: '/prayer', icon: Moon, label: 'Prayer' },
     { to: '/settings', icon: Settings, label: 'Settings' },
   ];
 

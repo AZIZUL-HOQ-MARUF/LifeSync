@@ -2,5 +2,25 @@ name = "lifesync-gemini-proxy"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 
+# KV Namespaces — replace placeholder IDs after running:
+#   wrangler kv namespace create PRAYER_SUBS
+#   wrangler kv namespace create PRAYER_CACHE
+#   wrangler kv namespace create PRAYER_SUBS --preview
+#   wrangler kv namespace create PRAYER_CACHE --preview
+[[kv_namespaces]]
+binding = "PRAYER_SUBS"
+id = "3f4e018d76b348beab1a34c4bcefe0a1"
+preview_id = "821de79692a74203b6c929e492881bd4"
+
+[[kv_namespaces]]
+binding = "PRAYER_CACHE"
+id = "511fda24e39b4ca1977b5cf391f39e74"
+preview_id = "7f26f24a309a4f129e4773a45a979fe7"
+
+# Cron: fires every 10 minutes to send prayer time notifications
+[triggers]
+crons = ["*/10 * * * *"]
+
 [env.production.vars]
-# Don't put your actual API key here - use wrangler secret put command
+# Secrets are set via: wrangler secret put <NAME>
+# Required: GEMINI_API_KEY (already set), VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT
