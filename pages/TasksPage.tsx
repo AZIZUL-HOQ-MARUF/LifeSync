@@ -17,7 +17,6 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 }
 
 const WORKER_URL = (import.meta.env.VITE_GEMINI_PROXY_URL as string) ?? '';
-const VAPID_KEY = (import.meta.env.VITE_VAPID_PUBLIC_KEY as string) ?? '';
 
 const TasksPage: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -152,7 +151,7 @@ const TasksPage: React.FC = () => {
   };
 
   const handleToggleTaskPush = async () => {
-    if (!('PushManager' in window) || !VAPID_KEY) return;
+    if (!('PushManager' in window)) return;
     setIsPushLoading(true);
     try {
       const reg = await navigator.serviceWorker.ready;
@@ -174,11 +173,16 @@ const TasksPage: React.FC = () => {
           setNotifPermission(result);
           if (result !== 'granted') return;
         }
+        const keyRes = await fetch(`${WORKER_URL}/vapid-public-key`);
+        if (!keyRes.ok) throw new Error('Failed to fetch VAPID public key from worker');
+        const { publicKey: vapidKey } = await keyRes.json();
+        if (!vapidKey) throw new Error('Worker returned empty VAPID public key');
+
         let sub = await reg.pushManager.getSubscription();
         if (!sub) {
           sub = await reg.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(VAPID_KEY),
+            applicationServerKey: urlBase64ToUint8Array(vapidKey),
           });
         }
         await syncTasksToWorker(tasks, sub);

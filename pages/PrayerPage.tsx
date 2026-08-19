@@ -271,14 +271,9 @@ const PrayerPage: React.FC = () => {
 
   const handleTogglePushNotifications = useCallback(async () => {
     const WORKER_URL = (import.meta.env.VITE_GEMINI_PROXY_URL as string) ?? '';
-    const VAPID_KEY = (import.meta.env.VITE_VAPID_PUBLIC_KEY as string) ?? '';
 
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       alert('Push notifications are not supported in this browser.');
-      return;
-    }
-    if (!VAPID_KEY) {
-      alert('VITE_VAPID_PUBLIC_KEY is not set in .env.local');
       return;
     }
 
@@ -301,6 +296,12 @@ const PrayerPage: React.FC = () => {
         const permission = await Notification.requestPermission();
         setNotifPermission(permission);
         if (permission !== 'granted') return;
+
+        // Fetch VAPID public key from worker at runtime — guarantees key always matches
+        const keyRes = await fetch(`${WORKER_URL}/vapid-public-key`);
+        if (!keyRes.ok) throw new Error('Failed to fetch VAPID public key from worker');
+        const { publicKey: VAPID_KEY } = await keyRes.json();
+        if (!VAPID_KEY) throw new Error('Worker returned empty VAPID public key');
 
         const sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
