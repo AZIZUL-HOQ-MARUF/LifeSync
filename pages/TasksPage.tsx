@@ -38,7 +38,10 @@ const TasksPage: React.FC = () => {
     if (saved) {
       setTasks(JSON.parse(saved));
     }
-    setNotifPermission(notificationService.getPermission());
+    const refresh = () => setNotifPermission(notificationService.getPermission());
+    refresh();
+    document.addEventListener('visibilitychange', refresh);
+    return () => document.removeEventListener('visibilitychange', refresh);
   }, []);
 
   // Check push subscription state on mount

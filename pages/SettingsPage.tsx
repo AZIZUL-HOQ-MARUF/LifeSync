@@ -32,7 +32,10 @@ const SettingsPage: React.FC = () => {
   }, [theme]);
 
   useEffect(() => {
-    setNotifPermission(notificationService.getPermission());
+    const refresh = () => setNotifPermission(notificationService.getPermission());
+    refresh();
+    document.addEventListener('visibilitychange', refresh);
+    return () => document.removeEventListener('visibilitychange', refresh);
   }, []);
 
   // Check push subscription states on mount
