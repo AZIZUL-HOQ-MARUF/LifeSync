@@ -125,6 +125,8 @@ async function handleTaskScheduled(env) {
     cursor = result.list_complete ? undefined : result.cursor;
   } while (cursor);
 
+  console.log(`handleTaskScheduled: VAPID_PUBLIC_KEY prefix=${env.VAPID_PUBLIC_KEY?.slice(0, 20)}`);
+  console.log(`handleTaskScheduled: found ${allKeys.length} subscription(s)`);
   if (allKeys.length === 0) return;
 
   await Promise.allSettled(
@@ -135,9 +137,11 @@ async function handleTaskScheduled(env) {
       const now = Date.now();
       const endpointHash = await sha256Hex(subscription.endpoint);
 
+      console.log(`processing ${tasks.length} task(s) for ${name}`);
       for (const task of tasks) {
         const dueMs = new Date(task.dueDate).getTime();
         const diffMs = now - dueMs;
+        console.log(`task [${task.id}] "${task.title}" dueDate=${task.dueDate} diffMin=${(diffMs/60000).toFixed(1)}`);
         // Window: [0, 11 min] after due time (matches 10-min cron + 1 min grace)
         if (diffMs < 0 || diffMs > 11 * 60 * 1000) continue;
 
@@ -151,6 +155,8 @@ async function handleTaskScheduled(env) {
             { title: 'Task Due', body: task.title, icon: './icon-192.png', badge: './icon-192.png' },
             vapidKeys
           );
+          const respText = await resp.text();
+          console.log(`task push [${task.id}] status=${resp.status} body=${respText}`);
           if (resp.status === 410 || resp.status === 404) {
             await env.PRAYER_SUBS.delete(name);
           }
