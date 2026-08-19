@@ -188,6 +188,7 @@ async function handleScheduled(env) {
     cursor = result.list_complete ? undefined : result.cursor;
   } while (cursor);
 
+  console.log(`handleScheduled: found ${allKeys.length} prayer subscription(s)`);
   if (allKeys.length === 0) return;
 
   await Promise.allSettled(
@@ -199,11 +200,13 @@ async function handleScheduled(env) {
       const tz = timezone ?? 'UTC';
 
       const timings = await getPrayerTimings(lat, lon, method ?? 3, tz, env);
-      if (!timings) return;
+      if (!timings) { console.log(`prayer: no timings for ${name}`); return; }
 
       const nowMinutes = getMinutesInTimezone(tz);
       const dateStr = getTodayDateStr(tz);
       const endpointHash = await sha256Hex(subscription.endpoint);
+
+      console.log(`prayer: nowMinutes=${nowMinutes} tz=${tz} sub=${name.slice(0, 16)}`);
 
       for (const prayerName of PRAYER_NAMES) {
         const timeStr = timings[prayerName];
@@ -231,7 +234,8 @@ async function handleScheduled(env) {
             },
             vapidKeys
           );
-          // Subscription expired — remove from KV to keep storage clean
+          const respText = await resp.text();
+          console.log(`prayer push [${prayerName}] status=${resp.status} body=${respText}`);
           if (resp.status === 410 || resp.status === 404) {
             await env.PRAYER_SUBS.delete(name);
           }
